@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "mharris_ext"
-  s.version = "1.6.0"
+  s.version = "1.7.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Mike Harris"]
-  s.date = "2012-11-13"
+  s.date = "2013-04-12"
   s.description = "mharris717 utlity methods"
   s.email = "mharris717@gmail.com"
   s.extra_rdoc_files = [
@@ -35,16 +35,18 @@ Gem::Specification.new do |s|
     "lib/mharris_ext/gems.rb",
     "lib/mharris_ext/methods.rb",
     "lib/mharris_ext/object.rb",
+    "lib/mharris_ext/present.rb",
     "lib/mharris_ext/regexp.rb",
     "lib/mharris_ext/string.rb",
     "lib/mharris_ext/time.rb",
+    "lib/mharris_ext/trace.rb",
     "mharris_ext.gemspec",
     "test/mharris_ext_test.rb",
     "test/test_helper.rb"
   ]
   s.homepage = "http://github.com/GFunk911/mharris_ext"
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.24"
+  s.rubygems_version = "1.8.23"
   s.summary = "mharris717 utility methods"
 
   if s.respond_to? :specification_version then
