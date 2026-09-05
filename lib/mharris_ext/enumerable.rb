@@ -1,7 +1,7 @@
-class Fixnum
+class Integer
   def of
     res = []
-    self.times { res << yield }
+    times { res << yield }
     res
   end
 end
@@ -12,80 +12,29 @@ module Enumerable
     each { |x| res += x }
     res
   end
+
   def sum_b
     map { |x| yield(x) }.sum
   end
+
   def avg_b(&b)
     sum_b(&b).to_f / size.to_f
   end
-end
 
-module Enumerable
-  def nths_hashx(num)
-    res = {}
-    s = e_f = e_i = 0
-    n_size = size.to_f / num.to_f
-    total_segment_size = 0
-    (0...num).each do |n|
-      s = e_i
-      e_f = e_f + n_size
-      e_i = (e_f+0.5).to_i
-      seg = self[s...e_i]
-     # puts %w(s e_f e_i seg).map { |x| "#{x}: #{send(x)}" }.join("\n")
-      #puts "s: #{s}, e_f: #{e_f}, e_i: #{e_i}, seg: #{seg.inspect}"
-      res[n] = seg
-      total_segment_size += res[n].size
-    end
-    unless total_segment_size == size
-      puts inspect
-      puts res.inspect
-      raise "nths_hash is bad" 
-    end
-    res
-  end
   def nths(num)
-    res = []
-    s = e_f = e_i = 0
-    n_size = size.to_f / num.to_f
-    total_segment_size = 0
-    (0...num).each do |n|
-      s = e_i
-      e_f = e_f + n_size
-      e_i = (e_f+0.5).to_i
-      seg = self[s...e_i]
-     # puts %w(s e_f e_i seg).map { |x| "#{x}: #{send(x)}" }.join("\n")
-      #puts "s: #{s}, e_f: #{e_f}, e_i: #{e_i}, seg: #{seg.inspect}"
-      res << seg
-      total_segment_size += res[n].size
+    raise ArgumentError, 'number of partitions must be a positive integer' unless num.is_a?(Integer) && num > 0
+    items = to_a
+    size_per = items.size.fdiv(num)
+    Array.new(num) do |i|
+      items[(i * size_per).round...((i + 1) * size_per).round]
     end
-    unless total_segment_size == size
-      puts inspect
-      puts res.inspect
-      raise "nths_hash is bad" 
-    end
-    res
   end
+
   def nths_hash(num)
-    res = {}
-    nths(num).each_with_index { |x,i| res[i] = x }
-    res
+    nths(num).each_with_index.to_h { |x,i| [i,x] }
   end
-end
 
-res = [1,2,3,4,5,6].nths_hash(3)
-exp = {0 => [1,2], 1 => [3,4], 2 => [5,6]}
-unless res == exp
-  puts res.inspect
-  puts exp.inspect
-  raise "nths_hash doesn't work"
-end
-
-res = [1,2,3,4,5,6,7].nths_hash(3)
-exp = {0 => [1,2], 1 => [3,4,5], 2 => [6,7]}
-unless res == exp
-  puts res.inspect
-  puts exp.inspect
-  raise "nths_hash doesn't work"
+  alias_method :nths_hashx, :nths_hash
 end
 
 class Hash
@@ -104,8 +53,13 @@ end
 
 class String
   def commify
-    return self if length <= 3
-    self[0...-3].commify + "," + self[-3..-1]
+    if (parts = /\A([+-]?)(\d+)(\.\d+)?\z/.match(self))
+      digits = parts[2].reverse.scan(/.{1,3}/).join(',').reverse
+      "#{parts[1]}#{digits}#{parts[3]}"
+    else
+      # Preserve the legacy grouping behavior for nonnumeric strings.
+      return self if length <= 3
+      self[0...-3].commify + ',' + self[-3..-1]
+    end
   end
 end
-      

@@ -1,23 +1,20 @@
 def has_bundler?
-  Bundler
-  true
-rescue => exp
-  return false
+  !!defined?(Bundler)
 end
 
 module MharrisExt
-  def self.ec(cmd,ops={})
+  def self.ec(cmd,ops = {})
     puts cmd unless ops[:silent]
-    res = nil
-    if has_bundler?
-      Bundler.with_clean_env do
-        res = `#{cmd}`
-      end
-    else
+    run = proc do
       res = `#{cmd}`
+      [res, $?]
     end
-
-    raise "bad cmd #{$?.to_i} #{cmd} #{res}" unless $?.to_i == 0
+    res, status = if has_bundler?
+      Bundler.with_unbundled_env(&run)
+    else
+      run.call
+    end
+    raise "bad cmd #{status.to_i} #{cmd} #{res}" unless status.success?
     puts res unless ops[:silent]
     res
   end

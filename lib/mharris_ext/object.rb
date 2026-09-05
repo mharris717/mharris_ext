@@ -1,6 +1,1 @@
-class Object
-  def tap
-    yield(self)
-    self
-  end
-end
+# Object#tap is provided by Ruby. Keep this require path for compatibility.

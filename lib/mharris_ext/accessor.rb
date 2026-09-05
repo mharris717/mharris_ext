@@ -2,7 +2,7 @@ class Object
   def attr_accessor_nn_one(sym)
     define_method(sym) do
       res = instance_variable_get("@#{sym}")
-      raise "method #{sym} cannot return nil value" unless res
+      raise "method #{sym} cannot return nil value" if res.nil?
       res
     end
     attr_writer(sym)

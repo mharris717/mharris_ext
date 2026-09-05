@@ -1,7 +1,102 @@
-mharris_ext===========
-Description goes here.
+= mharris_ext
 
-COPYRIGHT
-=========
+Small Ruby helpers used by the playoff-odds applications. Requiring the gem adds
+core extensions and top-level helpers. Ruby 2.7 or newer is required; the local
+development setup uses Ruby 3.3.7.
 
-Copyright (c) 2008 Mike Harris. See LICENSE for details.
+== Development
+
+  bundle install
+  bundle exec rake test
+  bundle exec rake build
+
+Tests use Minitest and SimpleCov, require no services, and include Active Support
+load-order checks. Coverage is written to coverage/index.html. The built gem is
+written to pkg/. VERSION is the authoritative version; VERSION.yml is retained
+for compatibility with older tooling. Jeweler, RCov and the placeholder Cucumber
+task are no longer part of the build or test workflow.
+
+The only runtime dependency is fattr. File.write is provided by Ruby, so Facets
+is no longer required. Bundler 2.4 or newer is recommended for development and
+for commands that use ec's unbundled child environment.
+
+== Initialization and lazy attributes
+
+  require 'mharris_ext'
+
+  class Options
+    include FromHash
+    attr_accessor :name, :enabled
+    fattr(:retries) { 3 }
+  end
+
+  options = Options.new(name: 'example', enabled: false)
+  options.from_hash(name: 'renamed') # updates and returns the same object
+  copy = Options.from_hash(name: 'another')
+
+Unknown attributes raise rather than being ignored. attr_accessor_nn :value
+provides an accessor that rejects nil when read; false and zero are valid values.
+
+== Collections and formatting
+
+  3.of { [] }                         # three distinct arrays
+  (1..7).nths(3)                      # [[1, 2], [3, 4, 5], [6, 7]]
+  [1, 2, 3].nths_hash(2)              # {0 => [1, 2], 1 => [3]}
+  [1, 2, 3].sum_b { |x| x * x }      # 14
+  [1, 2, 3].avg_b { |x| x * x }      # 4.666...
+  {a: 1, b: 2}.map_value { |x| x * 2 }
+  (-1234567).commify                   # "-1,234,567"
+  '1234.50'.commify                    # "1,234.50"
+  'x'.rpad(3)                         # "x  "
+  12.lpad(4)                          # "0012"
+
+Partition counts must be positive integers. Partitions preserve input order,
+include every element, and may be empty when more partitions than elements are
+requested. nths_hashx remains an alias of nths_hash. An empty avg_b retains its
+existing NaN result.
+
+blank? and present? respect existing implementations, including Active Support.
+When Active Support is absent, nil, false, empty collections and whitespace-only
+strings are blank. Ruby's native Object#tap is preserved.
+
+== Files and commands
+
+  File.create('example.txt', 'first')
+  File.append('example.txt', '-last')
+  mkdir_recursive('tmp/nested/path')
+  mkdir_recursive(dir: 'tmp/another/path')
+  mv_making_dir('example.txt', 'tmp/archive')
+  rm_r_if('tmp/archive')
+  ec('ruby --version', silent: true)
+  tm('work') { perform_work }
+
+Directory helpers load FileUtils themselves. ec executes a shell command,
+returns stdout, and raises on a nonzero status. When Bundler is loaded, its
+with_unbundled_env API isolates the child command from the current bundle.
+Without silent: true, the command and stdout are printed.
+
+Other helpers include Regexp.escaped, Time#short_dt, Object#local_methods,
+all_dirs_recursive, eat_exceptions, bt, and print_memory_usage!. The memory
+reporter returns a Thread and reports resident memory in kilobytes on systems
+with ps; stop and join that thread when finished.
+
+== 1.8.0 compatibility fixes
+
+* Removed the obsolete Facets File.write require and dependency.
+* Integer#of replaces the defunct Fixnum extension.
+* File helpers use File.exist? and load their standard-library dependency.
+* ec uses current Bundler APIs; timing uses a monotonic clock.
+* Fixed the memory reporter's removed String#to_a call.
+* Preserved Ruby's tap and existing Active Support blank?/present? methods.
+* Fixed false-valued non-nil accessors and the FromHash class factory.
+* Consolidated partition code, supported general Enumerable inputs, and moved
+  load-time assertions into tests while keeping the old alias available.
+* Fixed comma formatting for signed numbers and decimal fractions.
+
+Validated on Ruby 3.3.7 with Active Support 8.1.3.1. The built package also passed
+isolated smoke checks on Ruby 3.0.6, 3.2.2 and 3.3.7. Both the simulation library's
+269 examples and the Rails application's 9 integration tests also passed with
+this checkout on the Ruby load path. This version has not been published to
+RubyGems; the consumer lockfiles retain the released version until publication.
+
+Copyright (c) 2008 Mike Harris. See LICENSE for the MIT license.
